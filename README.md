@@ -1,4 +1,3 @@
----
 # 📘 **VBlog – Full Stack Blog Application**
 
 A full-stack blog platform built with **Next.js**, **Node.js**, **Express**, **Prisma**, and **PostgreSQL**.
