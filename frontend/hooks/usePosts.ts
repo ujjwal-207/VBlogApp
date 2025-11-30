@@ -1,9 +1,9 @@
 import { create } from "zustand";
 import { apiClient } from "@/lib/api";
-import { Post } from "@/types/post";
+/* import { Post } from "@/types/post"; */
 
 interface PostStore {
-  posts: Post[];
+  posts: any[];
   loading: boolean;
 
   fetchPosts: () => Promise<void>;
