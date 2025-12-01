@@ -31,7 +31,8 @@ export const useAuth = create<AuthStore>((set) => ({
       if (res.token) {
         Cookies.set("token", res.token, { 
           expires: 7,
-          sameSite: 'strict',
+          sameSite: 'lax',
+          path: '/',
           secure: process.env.NODE_ENV === 'production'
         });
         localStorage.setItem("token", res.token);
@@ -58,7 +59,8 @@ export const useAuth = create<AuthStore>((set) => ({
       if (res.token) {
         Cookies.set("token", res.token, { 
           expires: 7,
-          sameSite: 'strict',
+          path: '/',
+          sameSite: 'lax',
           secure: process.env.NODE_ENV === 'production'
         });
         localStorage.setItem("token", res.token);
@@ -76,7 +78,7 @@ export const useAuth = create<AuthStore>((set) => ({
 
   logout: () => {
     localStorage.removeItem("token");
-    Cookies.remove("token");
+    Cookies.remove("token",{ path: '/' });
     set({ user: null, token: null, isInitialized: true });
   },
 

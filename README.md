@@ -1,7 +1,7 @@
 # 📘 **VBlog – Full Stack Blog Application**
 
 A full-stack blog platform built with **Next.js**, **Node.js**, **Express**, **Prisma**, and **PostgreSQL**.
-This project was built for a **Frontend Developer Test**, with clean architecture, JWT authentication, CRUD functionality, custom hooks, and a simple search feature (frontend-only).
+This project was built for a **Frontend Developer Test**, containing authentication, CRUD operations, protected routes, frontend-only search, Docker support, and clean architecture.
 
 ---
 
@@ -9,34 +9,30 @@ This project was built for a **Frontend Developer Test**, with clean architectur
 
 ### 🧑‍💼 Authentication
 
-* Register
-* Login
-* JWT-based auth
-* Persisted token
+* Register / Login
+* JWT authentication
+* Token persistence
 * Protected routes
 * Logout
 
 ### 📝 Blog Management
 
-* Create Post
-* Edit Post
-* Delete Post
-* List Posts
-* View Posts
+* Create, Edit, Delete Posts
+* List & View Posts
 
 ### 🔍 Search (Frontend Only)
 
-* Instant search on dashboard
-* Filters posts on client side
+* Instant client-side search
+* No backend filtering
 
 ### ⚙️ Technical Highlights
 
 * Next.js App Router
 * Zustand for global state
-* Prisma ORM with Postgres
-* TypeScript everywhere
+* Prisma ORM
+* TypeScript
+* Docker support (frontend + backend + PostgreSQL)
 * Clean folder structure
-* Fully separated backend & frontend
 
 ---
 
@@ -47,16 +43,18 @@ VBlogApp/
 │── backend/
 │   ├── src/
 │   ├── prisma/
+│   ├── Dockerfile
 │   ├── package.json
-│   └── README.md
 │
-└── frontend/
-    ├── app/
-    ├── components/
-    ├── hooks/
-    ├── lib/
-    ├── package.json
-    └── README.md
+│── frontend/
+│   ├── app/
+│   ├── components/
+│   ├── hooks/
+│   ├── lib/
+│   ├── Dockerfile
+│   ├── package.json
+│
+└── docker-compose.yml
 ```
 
 ---
@@ -66,23 +64,24 @@ VBlogApp/
 ### **Frontend**
 
 * Next.js 15
-* TypeScript
 * TailwindCSS
-* Zustand (state management)
 * React Hook Form
-* Client-side search feature
+* Zustand
+* TypeScript
+* Docker
 
 ### **Backend**
 
 * Node.js + Express
-* TypeScript
 * Prisma ORM
 * PostgreSQL
 * JWT Authentication
+* TypeScript
+* Docker
 
 ---
 
-# 🗄️ **Backend Setup**
+# 🗄️ **Local Backend Setup (Without Docker)**
 
 ## 1️⃣ Install Dependencies
 
@@ -93,7 +92,7 @@ npm install
 
 ## 2️⃣ Environment Variables
 
-Create an `.env` file inside `backend/`:
+Create `backend/.env`:
 
 ```
 DATABASE_URL="postgresql://postgres:yourpassword@localhost:5432/blogapp?schema=public"
@@ -101,26 +100,26 @@ JWT_SECRET="supersecretkey"
 PORT=8000
 ```
 
-## 3️⃣ Create PostgreSQL Database
+## 3️⃣ Create DB
 
 ```bash
 psql -U postgres -c "CREATE DATABASE blogapp;"
 ```
 
-## 4️⃣ Prisma Migration
+## 4️⃣ Migrate Prisma
 
 ```bash
-npx prisma migrate dev --name init
+npx prisma migrate dev
 npx prisma generate
 ```
 
-## 5️⃣ Start Backend
+## 5️⃣ Start Server
 
 ```bash
 npm run dev
 ```
 
-Server runs at:
+Backend runs at:
 
 ```
 http://localhost:8000
@@ -128,42 +127,15 @@ http://localhost:8000
 
 ---
 
-# 🌐 **Backend API Endpoints**
-
-### **Auth**
-
-| Method | Endpoint             | Description   |
-| ------ | -------------------- | ------------- |
-| POST   | `/api/auth/register` | Register user |
-| POST   | `/api/auth/login`    | Login user    |
-
-### **Posts**
-
-| Method | Endpoint         | Description                |
-| ------ | ---------------- | -------------------------- |
-| GET    | `/api/posts`     | List posts                 |
-| POST   | `/api/posts`     | Create post (JWT required) |
-| PUT    | `/api/posts/:id` | Update post (JWT required) |
-| DELETE | `/api/posts/:id` | Delete post (JWT required) |
-
----
-
-# 💻 **Frontend Setup**
-
-## 1️⃣ Install Dependencies
+# 💻 **Local Frontend Setup (Without Docker)**
 
 ```bash
 cd frontend
 npm install
-```
-
-## 2️⃣ Run Frontend
-
-```bash
 npm run dev
 ```
 
-The app runs at:
+Frontend runs at:
 
 ```
 http://localhost:3000
@@ -171,42 +143,104 @@ http://localhost:3000
 
 ---
 
-# 🔍 **Search Feature (Frontend Only)**
+# 🐳 **Run Entire Project with Docker (Recommended)**
 
-The dashboard includes a search bar:
+This is the easiest way to run everything.
 
-* Filters posts **without hitting backend**
-* Works only with the list already fetched
-* Instant results
-* No debounce required for this assignment
+## ✔ Requirements
+
+* Docker
+* Docker Compose
+
+## 1️⃣ Root-level `docker-compose.yml`
+
+Your folder supports:
+
+* frontend
+* backend
+* database
+
+To run everything:
+
+```bash
+docker compose up --build
+```
+
+### After build completes:
+
+Frontend → `http://localhost:3000`
+Backend → `http://localhost:8000`
+Postgres → `localhost:5432`
 
 ---
 
-# 🧠 **Frontend Auth + Protection**
+# 🐳 **Backend Dockerfile**
 
-* JWT stored in `localStorage`
-* Zustand manages auth state
-* Auth hook: `useAuth`
-* Protected pages:
+Located at: `backend/Dockerfile`
+(Example using Debian-based image to avoid musl issues)
 
-  * `/dashboard`
-  * `/posts/create`
-  * `/posts/edit/:id`
+```dockerfile
+FROM node:20-bullseye
+WORKDIR /app
+COPY package*.json ./
+RUN apt-get update && apt-get install -y openssl
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 8000
+CMD ["npm", "start"]
+```
 
 ---
 
-# 🔐 **Token Validation Flow**
+# 🐳 **Frontend Dockerfile**
 
-### Backend:
+Located at: `frontend/Dockerfile`
 
-* `authMiddleware` verifies `Authorization: Bearer <token>`
-* Rejects 401 if token missing/invalid
+```dockerfile
+FROM node:20-bullseye AS builder
+WORKDIR /app
 
-### Frontend:
+COPY package*.json ./
+RUN npm install
 
-* Automatically attaches token in API requests
-* `useAuth.checkAuth()` restores user session
-* Protected routes redirect if no token
+COPY . .
+RUN npm run build
+
+FROM node:20-bullseye AS runner
+WORKDIR /app
+
+COPY --from=builder /app ./
+EXPOSE 3000
+
+CMD ["npm", "start"]
+
+```
+
+---
+
+# 🔍 **Frontend Search Feature**
+
+* Pure client-side search
+* No API calls
+* Filters the posts already in memory
+* Instant UI response
+
+---
+
+# 🔐 **Authentication Flow**
+
+### **Backend**
+
+* JWT signed using `JWT_SECRET`
+* Middleware validates tokens
+* Protects CRUD APIs
+
+### **Frontend**
+
+* Token saved in `localStorage` and `cookies`
+* Zustand stores user session
+* Auto redirect for protected routes
 
 ---
 
@@ -215,39 +249,32 @@ The dashboard includes a search bar:
 ```
 frontend/
 ├── app/
-│   ├── page.tsx
-│   ├── register/page.tsx
-│   ├── dashboard/page.tsx
-│   ├── posts/create/page.tsx
-│   └── posts/edit/[id]/page.tsx
-│
 ├── components/
-│   └── Navbar.tsx
-│
 ├── hooks/
-│   ├── useAuth.ts
-│   └── usePosts.ts
-│
 ├── lib/
-│   └── api.ts
-│
 └── middleware.ts
 ```
 
 ---
 
-# ▶️ **Running the Entire Project**
+# ▶️ **How to Run the Project**
 
-Open **two terminals**:
+## 🚦 **Option 1 — Run everything with Docker (recommended)**
 
-### Terminal 1 — Backend
+```bash
+docker compose up --build
+```
+
+## 🖥️ **Option 2 — Run locally (without Docker)**
+
+Terminal 1:
 
 ```bash
 cd backend
 npm run dev
 ```
 
-### Terminal 2 — Frontend
+Terminal 2:
 
 ```bash
 cd frontend
@@ -256,47 +283,15 @@ npm run dev
 
 ---
 
-# ❗ Common Errors & Fixes
+# 🎯 **This Project Includes**
 
-### ❌ Prisma client cannot read properties `__internal`
-
-**Fix:**
-Use Prisma 5.x instead of Prisma 7.x
-
-```bash
-npm uninstall prisma @prisma/client
-npm install prisma@5 @prisma/client@5
-```
-
-### ❌ Token not sent with requests
-
-Check:
-
-* `localStorage.setItem("token", token)` or `Cookies.set("token",token)`
-* API client includes Authorization header
-
-### ❌ Cannot access dashboard
-
-Check token:
-
-```bash
-localStorage.getItem("token") or `Cookies.set("token",token)`
-```
-
----
-
-# 🎉 **Project is Ready**
-
-You now have:
-
-✔ Full-stack blog app
-✔ CRUD operations
-✔ JWT authentication
-✔ Protected routes
-✔ Search functionality
-✔ Clean code
-✔ Deploy-ready architecture
-
----
+✔ Frontend UI with protected routes
+✔ Backend REST API
+✔ JWT Authentication
+✔ Prisma ORM
+✔ Full CRUD
+✔ Client-side search
+✔ Docker support for easy deployment
+✔ Clean code architecture
 
 
